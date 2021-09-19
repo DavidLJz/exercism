@@ -1,33 +1,112 @@
 <?php
 
-/*
- * By adding type hints and enabling strict type checking, code can become
- * easier to read, self-documenting and reduce the number of potential bugs.
- * By default, type declarations are non-strict, which means they will attempt
- * to change the original type to match the type specified by the
- * type-declaration.
- *
- * In other words, if you pass a string to a function requiring a float,
- * it will attempt to convert the string value to a float.
- *
- * To enable strict mode, a single declare directive must be placed at the top
- * of the file.
- * This means that the strictness of typing is configured on a per-file basis.
- * This directive not only affects the type declarations of parameters, but also
- * a function's return type.
- *
- * For more info review the Concept on strict type checking in the PHP track
- * <link>.
- *
- * To disable strict typing, comment out the directive below.
- */
-
 declare(strict_types=1);
 
 class Tournament
 {
     public function __construct()
     {
-        throw new BadFunctionCallException("Please implement the Tournament class!");
+    }
+
+    public function tally(string $scores='')
+    {
+        $output = 'Team                           | MP |  W |  D |  L |  P';
+
+        if ( !$scores ) return $output;
+
+        $matchStrings = explode('\n', trim($scores));
+
+        if ( !$matchStrings ) return $output;
+
+        $teamsData = [];
+
+        foreach ($matchStrings as $matchStr) {
+            $matchArr = array_filter(explode(';', $matchStr));
+
+            if ( count($matchArr) < 3 ) continue;
+
+            $teams = [
+                $matchArr[0], $matchArr[1]
+            ];
+
+            $result = $matchArr[2];
+
+            foreach ($teams as $n => $team) {
+                if ( $n === 0 ) {
+                    $win_condition = 'win';
+                } else {
+                    $win_condition = 'loss';
+                }
+
+                $win = 0;
+                $draw = 0;
+                $loss = 0;
+
+                if ( $result === $win_condition ) {
+                    $win = 1;
+                } elseif ($result === 'draw') {
+                    $draw = 1;
+                } else {
+                    $loss = 1;
+                }
+
+                $points = 0;
+
+                if ( $win ) {
+                    $points = 3;
+                } elseif ($draw) {
+                    $points = 1;
+                }
+
+                if ( empty($teamsData[ $team ]) ) {
+                    $teamsData[ $team ] = [
+                        'MP' => 1,
+                        'W' => $win,
+                        'D' => $draw,
+                        'L' => $loss,
+                        'P' => $points
+                    ];
+                }
+
+                else {
+                    $teamsData[ $team ]['MP']++;
+                    $teamsData[ $team ]['W'] += $win;
+                    $teamsData[ $team ]['D'] += $draw;
+                    $teamsData[ $team ]['L'] += $loss;
+                    $teamsData[ $team ]['P'] += $points;
+                }
+            }
+        }
+
+        ksort($teamsData);
+
+        $pointsCol = array_column($teamsData, 'P');
+
+        array_multisort($pointsCol, SORT_DESC, $teamsData);
+
+        $output .= '\n';
+
+        $n = 0;
+        $count = count($teamsData) - 1;
+
+        foreach ( $teamsData as $team => $teamData ) {
+            $teamData = array_map('strval', $teamData);
+
+            $line = str_pad($team, 31) . '|';
+
+            foreach ( $teamData as $k => $val ) {
+                $line .= str_pad(strval($val), 3, ' ', STR_PAD_LEFT);
+
+                if ($k !== 'P') {
+                    $line .= ' |';
+                }
+            }
+
+            $output .= $line . ( $n !== $count ? '\n' : '') ;
+
+            $n++;
+        }
+
+        return $output;
     }
 }
