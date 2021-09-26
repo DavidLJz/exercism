@@ -1,31 +1,14 @@
 <?php
 
-/*
- * By adding type hints and enabling strict type checking, code can become
- * easier to read, self-documenting and reduce the number of potential bugs.
- * By default, type declarations are non-strict, which means they will attempt
- * to change the original type to match the type specified by the
- * type-declaration.
- *
- * In other words, if you pass a string to a function requiring a float,
- * it will attempt to convert the string value to a float.
- *
- * To enable strict mode, a single declare directive must be placed at the top
- * of the file.
- * This means that the strictness of typing is configured on a per-file basis.
- * This directive not only affects the type declarations of parameters, but also
- * a function's return type.
- *
- * For more info review the Concept on strict type checking in the PHP track
- * <link>.
- *
- * To disable strict typing, comment out the directive below.
- */
-
 declare(strict_types=1);
 
 class Robot
 {
+    const DIRECTION_NORTH = 'north';
+    const DIRECTION_SOUTH = 'south';
+    const DIRECTION_EAST = 'east';
+    const DIRECTION_WEST = 'west';
+
     /**
      *
      * @var int[]
@@ -40,21 +23,128 @@ class Robot
 
     public function __construct(array $position, string $direction)
     {
-        throw new \BadMethodCallException("Implement the __construct method");
+        $this->position = $position;
+        $this->direction = $direction;
+    }
+
+    function __get(string $name)
+    {
+        return $this->{$name} ?? null;
+    }
+
+    protected function changeDirection(string $turn_direction) :void
+    {
+        // around? back?
+        $points = [ 'right' => '', 'left' => '' ];
+
+        if ( !array_key_exists($turn_direction, $points) ) {
+            throw new \InvalidArgumentException("Only right or left");
+        }
+
+        switch ($this->direction) {
+            case self::DIRECTION_NORTH: {
+                $points['right'] = self::DIRECTION_EAST;
+                $points['left'] = self::DIRECTION_WEST;
+                break;
+            }
+
+            case self::DIRECTION_EAST: {
+                $points['right'] = self::DIRECTION_SOUTH;
+                $points['left'] = self::DIRECTION_NORTH;
+                break;
+            }
+
+            case self::DIRECTION_SOUTH: {
+                $points['right'] = self::DIRECTION_WEST;
+                $points['left'] = self::DIRECTION_EAST;
+                break;
+            }
+
+            case self::DIRECTION_WEST: {
+                $points['right'] = self::DIRECTION_NORTH;
+                $points['left'] = self::DIRECTION_SOUTH;
+                break;
+            }
+
+            default: break;
+        }
+
+        $this->direction = $points[ $turn_direction ] ?? $this->direction;
     }
 
     public function turnRight(): self
     {
-        throw new \BadMethodCallException("Implement the turnRight method");
+        $this->changeDirection('right');
+
+        return $this;
     }
 
     public function turnLeft(): self
     {
-        throw new \BadMethodCallException("Implement the turnLeft method");
+        $this->changeDirection('left');
+
+        return $this;
     }
 
     public function advance(): self
     {
-        throw new \BadMethodCallException("Implement the advance method");
+        switch ($this->direction) {
+            case self::DIRECTION_NORTH: {
+                $this->position[1]++;
+                break;
+            }
+
+            case self::DIRECTION_EAST: {
+                $this->position[0]++;
+                break;
+            }
+
+            case self::DIRECTION_SOUTH: {
+                $this->position[1]--;
+                break;
+            }
+
+            case self::DIRECTION_WEST: {
+                $this->position[0]--;
+                break;
+            }
+
+            default: break;
+        }
+
+        return $this;
+    }
+
+    public function instructions(string $instructions) :self
+    {
+        $instructions = strtoupper($instructions);
+
+        if ( !$instructions || preg_match('/[^RLA]/', $instructions) ) {
+            throw new \InvalidArgumentException('Instruction error');
+        }
+
+        for ($i=0; $i <= (strlen($instructions) - 1); $i++) 
+        {
+            switch ( $instructions[$i] ) {
+                case 'R': {
+                    $this->turnRight();
+                    break;
+                }
+
+                case 'L': {
+                    $this->turnLeft();
+                    break;
+                }
+
+                case 'A': {
+                    $this->advance();
+                    break;
+                }
+
+                default: break;
+            }
+        }
+
+        return $this;
     }
 }
