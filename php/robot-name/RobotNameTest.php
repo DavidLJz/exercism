@@ -79,7 +79,7 @@ class RobotNameTest extends PHPUnit\Framework\TestCase
 
         for ($i = 0; $i < 10000; $i++) {
             $name = $this->robot->getName();
-            $this->assertArrayNotHasKey($name, $names, sprintf('Name %s reissued after Reset.', $name));
+            $this->assertArrayNotHasKey($name, $names, sprintf('Name %s reissued after Reset %d', $name, $i));
             $names[$name] = true;
             $this->robot->reset();
         }
