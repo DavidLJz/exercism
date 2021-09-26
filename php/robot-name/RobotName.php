@@ -5,7 +5,7 @@ declare(strict_types=1);
 class Robot
 {
     protected $name = '';
-    protected $past_names = [];
+    protected static $past_names = [];
 
     protected function generateName() :string
     {
@@ -18,7 +18,10 @@ class Robot
 
             $name = join('', $name);
 
-        } while ( in_array($name, $this->past_names) );
+        } 
+
+        // based on zembrowski's solution
+        while ( in_array($name, self::$past_names) );
 
         return $name;
     }
@@ -27,7 +30,7 @@ class Robot
     {
         if ( empty($this->name) ) {
             $this->name = $this->generateName();
-            $this->past_names[] = $this->name;
+            self::$past_names[] = $this->name;
         }
 
         return $this->name;
