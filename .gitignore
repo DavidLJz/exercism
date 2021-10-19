@@ -2,3 +2,4 @@
 desktop.ini
 *.sublime*
 .phpunit*
+node_modules
